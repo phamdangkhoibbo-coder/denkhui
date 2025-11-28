@@ -122,12 +122,6 @@
         .small { font-size: 13px; padding:6px 10px; border-radius:8px; }
     </style>
 </head>
-<link rel="manifest" href="manifest.json">
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
-</script>
 <body>
 
     <h1>Mày học tiếng Nhật giùm tao cáiiiiii</h1>
@@ -140,13 +134,19 @@ if ("serviceWorker" in navigator) {
                     <label>cưng hãy dán từ vựng cưng cần học vô đây nha cưnggg </label>
                     <textarea id="pasteFromWord" placeholder="Cưng copy mấy từ cưng học á pas vào đây. Example: &#10;犬 - con chó&#10;猫 - con mèo"></textarea>
                     <button onclick="bulkAddFromPaste()">⚡ Tạo thẻ từ dán🍣🍙🍥🍱🍝🍕🍔</button>
-                    <div class="muted">Hỗ trợ phân cách: " - ", "," , Tab hoặc dấu cách. Mỗi dòng 1 thẻ.</div>
+                    <div class="muted">Sau khi nhập xong tất cả từ vựng thì bấm nút này</div>
                 </div>
 
                 <div>
+                    <label>Hoặc import file (TXT / CSV / JSON)</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input id="fileBulk" type="file" accept=".txt,.csv,application/json" style="flex:1" onchange="importBulkFile(event)">
+                        <button onclick="document.getElementById('fileBulk').click()">📂 Chọn file</button>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <button onclick="showExample()">🎯 Ví dụ format</button>
                         <button onclick="clearCurrentLesson()">🧹 Xóa toàn bộ bài này</button>
                     </div>
-                    <div class="muted">Gợi ý: nếu dùng Word, cưng có thể copy → paste vào ô bên trái.</div>
                 </div>
             </div>
         </div>
