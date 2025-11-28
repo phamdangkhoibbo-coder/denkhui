@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Flashcard Nhật – Created by Đen Khui</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #ffe0f5, #ffd6f0);
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff97df;
+            font-size: 46px;
+            margin-top: 18px;
+            text-shadow:
+                0 0 8px white,
+                0 0 15px #ffb7ef,
+                0 0 30px #ff7bda;
+            font-weight: 700;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1000px;
+            margin: 18px auto 40px;
+        }
+
+        .box {
+            background: rgba(255, 245, 252, 0.95);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(255, 150, 230, 0.35);
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-size: 18px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input[type=text], textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 12px;
+            border-radius: 10px;
+            border: 2px solid #ffa6e9;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        textarea { resize: vertical; min-height:60px; }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            background: #ff7ed8;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 0 8px #ffb3ef;
+            margin-right: 8px;
+            margin-top: 6px;
+        }
+
+        button:hover { background: #ff58c5; }
+
+        .card {
+            width: 100%;
+            height: 260px;
+            margin-top: 12px;
+            perspective: 1200px;
+        }
+
+        .inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: 0.5s;
+        }
+
+        .flipped { transform: rotateY(180deg); }
+
+        .side {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            display:flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 63px;
+            font-weight: 700;
+            color: #4b0036;
+            background: rgba(255,239,250,0.85);
+            border: 2px solid #ffa6e9;
+            border-radius: 18px;
+            padding: 12px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .back { transform: rotateY(180deg); }
+
+        .center { text-align: center; margin-top: 14px; }
+
+        .signature { text-align:center; margin-top: 18px; font-size: 15px; color:#ff7ed8; font-weight:700; }
+
+        .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 800px) { .two-cols { grid-template-columns: 1fr; } }
+
+        .muted { font-size: 13px; color: #6b0060; margin-top:6px; }
+        .small { font-size: 13px; padding:6px 10px; border-radius:8px; }
+    </style>
+</head>
+<link rel="manifest" href="manifest.json">
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+<body>
+
+    <h1>Mày học tiếng Nhật giùm tao cáiiiiii</h1>
+
+        <!-- BULK / IMPORT -->
+        <div class="box">
+            <h3 style="margin:0 0 8px 0;">Import</h3>
+            <div class="two-cols">
+                <div>
+                    <label>cưng hãy dán từ vựng cưng cần học vô đây nha cưnggg </label>
+                    <textarea id="pasteFromWord" placeholder="Cưng copy mấy từ cưng học á pas vào đây. Example: &#10;犬 - con chó&#10;猫 - con mèo"></textarea>
+                    <button onclick="bulkAddFromPaste()">⚡ Tạo thẻ từ dán🍣🍙🍥🍱🍝🍕🍔</button>
+                    <div class="muted">Hỗ trợ phân cách: " - ", "," , Tab hoặc dấu cách. Mỗi dòng 1 thẻ.</div>
+                </div>
+
+                <div>
+                    <label>Hoặc import file (TXT / CSV / JSON)</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input id="fileBulk" type="file" accept=".txt,.csv,application/json" style="flex:1" onchange="importBulkFile(event)">
+                        <button onclick="document.getElementById('fileBulk').click()">📂 Chọn file</button>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <button onclick="showExample()">🎯 Ví dụ format</button>
+                        <button onclick="clearCurrentLesson()">🧹 Xóa toàn bộ bài này</button>
+                    </div>
+                    <div class="muted">Gợi ý: nếu dùng Word, cưng có thể copy → paste vào ô bên trái.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION -->
+        <div class="box center">
+            <button onclick="prevCard()">⬅ Thẻ trước</button>
+            <button onclick="nextCard()">➡ Thẻ sau</button>
+
+            <button onclick="prevLesson()">⬅ Bài trước</button>
+            <button onclick="nextLesson()">➡ Bài sau</button>
+
+            <button onclick="deleteCard()">🗑 Xóa thẻ</button>
+
+            <div style="margin-top:12px; font-size:18px;">
+                Bài: <span id="lessonNum">1</span> —
+                Thẻ: <span id="cardNum">0</span>/<span id="cardTotal">0</span>
+            </div>
+        </div>
+
+        <!-- FLASHCARD -->
+        <div class="card">
+            <div id="cardInner" class="inner" onclick="flipCard()">
+                <div class="side front" id="frontCard">Ấn để lật</div>
+                <div class="side back" id="backCard">Nội dung</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="signature">Created by PHAM DANG KHOI</div>
+
+<script>
+/* ----------------- Core data ----------------- */
+let lessons = [[]]; // array of lessons, each lesson is array of {front, back}
+let currentLesson = 0;
+let currentIndex = 0;
+
+/* ------------- persistence (localStorage) -------------- */
+const STORAGE_KEY = "denkhui_flashcards_v1";
+
+function autoSave() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
+    } catch (e) {
+        console.warn("AutoSave failed:", e);
+    }
+}
+
+function loadFromLocal() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) lessons = parsed;
+        } catch (e) { console.warn("Load parse error", e); }
+    }
+    // make sure structure valid
+    if (!Array.isArray(lessons) || lessons.length === 0) lessons = [[]];
+    if (!lessons[currentLesson]) { currentLesson = 0; }
+    refreshDisplay();
+}
+
+/* ------------- UI refresh & card ops --------------- */
+function refreshDisplay() {
+    if (!lessons[currentLesson]) lessons[currentLesson] = [];
+    let l = lessons[currentLesson];
+
+    document.getElementById("lessonNum").textContent = currentLesson + 1;
+    document.getElementById("cardTotal").textContent = l.length;
+    document.getElementById("cardNum").textContent = l.length ? currentIndex + 1 : 0;
+
+    if (l.length > 0) {
+        const item = l[currentIndex] || l[0];
+        document.getElementById("frontCard").textContent = item.front;
+        document.getElementById("backCard").textContent = item.back;
+    } else {
+        document.getElementById("frontCard").textContent = "Không có thẻ";
+        document.getElementById("backCard").textContent = "—";
+    }
+}
+
+/* ------------- single-card functions --------------- */
+function addCard() {
+    const f = document.getElementById("frontInput").value.trim();
+    const b = document.getElementById("backInput").value.trim();
+    if (!f || !b) {
+        alert("Nhập mặt trước và mặt sau trước khi thêm.");
+        return;
+    }
+    lessons[currentLesson].push({ front: f, back: b });
+    currentIndex = lessons[currentLesson].length - 1;
+    document.getElementById("frontInput").value = "";
+    document.getElementById("backInput").value = "";
+    autoSave();
+    refreshDisplay();
+}
+
+function deleteCard() {
+    let l = lessons[currentLesson];
+    if (!l || l.length === 0) return;
+    if (!confirm("Xác nhận xóa thẻ hiện tại?")) return;
+    l.splice(currentIndex, 1);
+    if (currentIndex >= l.length) currentIndex = l.length - 1;
+    if (currentIndex < 0) currentIndex = 0;
+    autoSave();
+    refreshDisplay();
+}
+
+function flipCard() {
+    document.getElementById("cardInner").classList.toggle("flipped");
+}
+
+function nextCard() {
+    if (!lessons[currentLesson].length) return;
+    currentIndex = (currentIndex + 1) % lessons[currentLesson].length;
+    refreshDisplay();
+}
+
+function prevCard() {
+    if (!lessons[currentLesson].length) return;
+    currentIndex = (currentIndex - 1 + lessons[currentLesson].length) % lessons[currentLesson].length;
+    refreshDisplay();
+}
+
+function nextLesson() {
+    currentLesson++;
+    if (!lessons[currentLesson]) lessons[currentLesson] = [];
+    currentIndex = 0;
+    autoSave();
+    refreshDisplay();
+}
+
+function prevLesson() {
+    if (currentLesson === 0) return;
+    currentLesson--;
+    currentIndex = 0;
+    autoSave();
+    refreshDisplay();
+}
+
+function saveToFile() {
+    const data = JSON.stringify(lessons, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "flashcard_DenKhui.json";
+    a.click();
+}
+
+/* ------------- bulk import helpers -------------- */
+
+/*
+  parseLine:
+  - supports separators: " - " (dash), "," , tab, or first whitespace group
+  - returns {front, back} or null
+*/
+function parseLine(line) {
+    line = line.trim();
+    if (!line) return null;
+
+    // try dash with spaces
+    if (line.includes(" - ")) {
+        const parts = line.split(" - ");
+        return { front: parts[0].trim(), back: parts.slice(1).join(" - ").trim() };
+    }
+    // try simple dash (no spaces)
+    if (line.includes("-")) {
+        // but ensure not to split Japanese hyphen inside words too aggressively:
+        const parts = line.split("-");
+        if (parts.length >= 2) {
+            return { front: parts[0].trim(), back: parts.slice(1).join("-").trim() };
+        }
+    }
+    // try comma
+    if (line.includes(",")) {
+        const parts = line.split(",");
+        return { front: parts[0].trim(), back: parts.slice(1).join(",").trim() };
+    }
+    // try tab
+    if (line.includes("\t")) {
+        const parts = line.split("\t");
+        return { front: parts[0].trim(), back: parts.slice(1).join("\t").trim() };
+    }
+    // fallback: split by two or more spaces
+    const m = line.split(/\s{2,}/);
+    if (m.length >= 2) return { front: m[0].trim(), back: m.slice(1).join("  ").trim() };
+
+    // final fallback: split by first space
+    const idx = line.indexOf(" ");
+    if (idx > -1) {
+        return { front: line.slice(0, idx).trim(), back: line.slice(idx+1).trim() };
+    }
+
+    // can't parse single token
+    return null;
+}
+
+/* Add from pasted textarea (Word) */
+function bulkAddFromPaste() {
+    const raw = document.getElementById("pasteFromWord").value.trim();
+    if (!raw) { alert("Dán nội dung Word vào ô trước."); return; }
+
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length>0);
+    let added = 0;
+    lines.forEach(line => {
+        const parsed = parseLine(line);
+        if (parsed && parsed.front && parsed.back) {
+            lessons[currentLesson].push({ front: parsed.front, back: parsed.back });
+            added++;
+        }
+    });
+
+    autoSave();
+    refreshDisplay();
+    alert("Đã thêm " + added + " thẻ vào Bài " + (currentLesson+1));
+    // clear paste area? keep as is to allow other pastes
+}
+
+/* Import from file: txt, csv, json */
+function importBulkFile(evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+
+    const name = file.name.toLowerCase();
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        if (name.endsWith(".json") || file.type === "application/json") {
+            // try parse JSON
+            try {
+                const parsed = JSON.parse(content);
+                // if it looks like an array of lessons (your format), just replace/merge
+                if (Array.isArray(parsed)) {
+                    // Merge: append all lessons into current lesson OR replace? we'll append current lesson + offer both behaviours.
+                    // Here: append parsed[0].. items into current lesson if parsed is [[{front,back}]]
+                    if (Array.isArray(parsed[0]) && Array.isArray(parsed[0][0])) {
+                        // nested deep, just flatten first-level arrays
+                        parsed.forEach((lessonArray) => {
+                            if (Array.isArray(lessonArray)) {
+                                lessonArray.forEach(item => {
+                                    if (item && item.front && item.back) lessons[currentLesson].push(item);
+                                });
+                            }
+                        });
+                    } else if (Array.isArray(parsed[0]) && parsed[0].length && parsed[0][0].front) {
+                        // parsed like [[{front,back}]]
+                        parsed[0].forEach(item => {
+                            if (item && item.front && item.back) lessons[currentLesson].push(item);
+                        });
+                    } else if (parsed.length && parsed[0] && parsed[0].front) {
+                        // parsed is array of cards
+                        parsed.forEach(item => {
+                            if (item && item.front && item.back) lessons[currentLesson].push(item);
+                        });
+                    } else {
+                        // unknown JSON shape: try to find objects with front/back anywhere
+                        alert("JSON không theo format chuẩn, thử nhập thủ công hoặc mở file và chuyển sang TXT/CSV.");
+                        return;
+                    }
+                    autoSave();
+                    refreshDisplay();
+                    alert("Import JSON thành công. Các thẻ đã được gộp vào bài hiện tại.");
+                    return;
+                } else {
+                    alert("JSON không đúng định dạng array. (Cần array các thẻ hoặc array các bài).");
+                    return;
+                }
+            } catch (err) {
+                alert("Không đọc được JSON: " + err);
+                return;
+            }
+        } else {
+            // treat as text/csv
+            const rows = content.split(/\r?\n/).map(r => r.trim()).filter(r => r.length>0);
+            let added = 0;
+            rows.forEach(row => {
+                const p = parseLine(row);
+                if (p && p.front && p.back) {
+                    lessons[currentLesson].push(p);
+                    added++;
+                }
+            });
+            autoSave();
+            refreshDisplay();
+            alert("Import file thành công: đã thêm " + added + " thẻ.");
+        }
+    };
+
+    // read as text (for txt/csv/json)
+    reader.readAsText(file);
+}
+
+/* Clear current lesson (destructive) */
+function clearCurrentLesson() {
+    if (!confirm("Xóa toàn bộ thẻ trong bài hiện tại? Hành động này không thể hoàn tác.")) return;
+    lessons[currentLesson] = [];
+    currentIndex = 0;
+    autoSave();
+    refreshDisplay();
+}
+
+/* show format example modal (simple) */
+function showExample() {
+    const example = "Ví dụ các dòng hợp lệ (mỗi dòng 1 thẻ):\n\n" +
+                    "犬 - con chó\n" +
+                    "猫, con mèo\n" +
+                    "水\tnước (tab phân cách)\n" +
+                    "空 bầu trời (cách 2 khoảng trắng hoặc 1 khoảng)\n\n" +
+                    "Bạn có thể copy từ Word và paste thẳng vào ô 'Paste từ Word'.";
+    alert(example);
+}
+
+/* ------------- initialize on load -------------- */
+loadFromLocal();
+
+/* make flip clickable only when card exists: handled via onclick */
+/* optional: keyboard shortcuts */
+document.addEventListener('keydown', function(e) {
+    // left/right arrows for cards, up/down for lessons
+    if (e.key === 'ArrowRight') nextCard();
+    if (e.key === 'ArrowLeft') prevCard();
+    if (e.key === 'ArrowUp') prevLesson();
+    if (e.key === 'ArrowDown') nextLesson();
+});
+</script>
+
+<style>
+/* Cánh hoa anh đào thật 100%, không chữ, không troll */
+.petal {
+    position: fixed;
+    top: -50px;
+    pointer-events: none;
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle at 30% 30%, #ffb7e5, #ff9edf);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-30deg);
+    box-shadow: 0 0 12px #fff;
+    animation: sakuraFall linear infinite;
+    z-index: 999;
+}
+@keyframes sakuraFall {
+    0%   { transform: translateY(-100vh) rotate(0deg) translateX(0); opacity: 0; }
+    10%  { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg) translateX(100px); opacity: 0; }
+}
+</style>
+
+<script>
+// Tạo cánh hoa thật, không chữ, bay nghiêng nghiêng như thật luôn
+function createSakura() {
+    const p = document.createElement("div");
+    p.classList.add("petal");
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.width = p.style.height = (Math.random() * 12 + 18) + "px";
+    p.style.animationDuration = (Math.random() * 12 + 12) + "s";
+    p.style.animationDelay = Math.random() * 8 + "s";
+    p.style.opacity = Math.random() * 0.5 + 0.6;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 30000);
+}
+
+// Rơi liên tục, nhẹ nhàng
+setInterval(createSakura, 250);
+for(let i = 0; i < 40; i++) {
+    setTimeout(createSakura, i * 300);
+}
+</script>
+</body>
+</html>
