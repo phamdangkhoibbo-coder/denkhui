@@ -144,13 +144,6 @@ if ("serviceWorker" in navigator) {
                 </div>
 
                 <div>
-                    <label>Hoặc import file (TXT / CSV / JSON)</label>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <input id="fileBulk" type="file" accept=".txt,.csv,application/json" style="flex:1" onchange="importBulkFile(event)">
-                        <button onclick="document.getElementById('fileBulk').click()">📂 Chọn file</button>
-                    </div>
-                    <div style="margin-top:10px;">
-                        <button onclick="showExample()">🎯 Ví dụ format</button>
                         <button onclick="clearCurrentLesson()">🧹 Xóa toàn bộ bài này</button>
                     </div>
                     <div class="muted">Gợi ý: nếu dùng Word, cưng có thể copy → paste vào ô bên trái.</div>
