@@ -63,6 +63,7 @@
     <div style="display:flex;flex-wrap:wrap;align-items:center;">
       <button onclick="bulkAddFromPaste()">Xuất thẻ từ vựng 🍕🍝🍙🍥🍱🍣🍩🍔</button>
       <button onclick="clearCurrentLesson()">Xóa toàn bộ bài này</button>
+      <button onclick="shuffleLesson()">Trộn toàn bộ thẻ</button>
       <button onclick="prevCard()">Thẻ trước</button>
       <button onclick="nextCard()">Thẻ sau</button>
       <button onclick="deleteCard()">Xóa thẻ hiện tại</button>
@@ -377,6 +378,24 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowUp') prevLesson();
     if (e.key === 'ArrowDown') nextLesson();
 });
+// Hàm trộn bài – thêm vào để có nút "Trộn toàn bộ thẻ"
+function shuffleLesson() {
+    if (!currentCards || currentCards.length <= 1) {
+        alert("Không đủ thẻ để trộn!");
+        return;
+    }
+    // Fisher-Yates shuffle – chuẩn xác, ngẫu nhiên hoàn toàn
+    for (let i = currentCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = currentCards[i];
+        currentCards[i] = currentCards[j];
+        currentCards[j] = temp;
+    }
+    currentIndex = 0; // quay về thẻ đầu sau khi trộn
+    saveCurrentDeck();
+    refreshDisplay();
+    alert("Đã trộn ngẫu nhiên toàn bộ thẻ trong bộ!");
+}
 </script>
 </body>
 </html>
