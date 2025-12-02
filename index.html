@@ -64,6 +64,8 @@
       <button onclick="bulkAddFromPaste()">Xuất thẻ từ vựng 🍕🍝🍙🍥🍱🍣🍩🍔</button>
       <button onclick="clearCurrentLesson()">Xóa toàn bộ bài này</button>
       <button onclick="shuffleLesson()">Trộn toàn bộ thẻ</button>
+      <button onclick="prevCard()">Thẻ trước</button>
+      <button onclick="nextCard()">Thẻ sau</button>
       <button onclick="deleteCard()">Xóa thẻ hiện tại</button>
       <div style="margin-left:auto;font-size:16px;color:#6b2a4a;">
         Bộ hiện tại: <strong><span id="currentDeckName">— Chưa chọn —</span></strong>
@@ -90,8 +92,6 @@
   </div>
 
 </div>
-      <button onclick="prevCard()">Thẻ trước</button>
-      <button onclick="nextCard()">Thẻ sau</button>
 
 <div class="signature">Created by PHAM DANG KHOI</div>
 
@@ -202,6 +202,16 @@ function closeLesson() {
 }
 
 function renderDeckList() {
+allDecks.sort((a, b) => {
+    const getNum = name => {
+        const m = name.match(/\d+/); // tìm số
+        return m ? parseInt(m[0], 10) : Infinity; // nếu không có số -> Infinity
+    };
+    const numA = getNum(a.name);
+    const numB = getNum(b.name);
+    if(numA === numB) return a.name.localeCompare(b.name); // cùng số -> sắp xếp theo chữ
+    return numA - numB;
+});
   const list = document.getElementById("deckList");
   list.innerHTML = "";
   if(allDecks.length === 0){
@@ -399,6 +409,3 @@ function shuffleLesson() {
 </script>
 </body>
 </html>
-
-
-
