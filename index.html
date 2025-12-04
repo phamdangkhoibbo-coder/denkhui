@@ -406,7 +406,111 @@ function shuffleLesson() {
     refreshDisplay();
     alert("Đã trộn ngẫu nhiên toàn bộ thẻ trong bộ!");
 }
+/* ====== FLIP VIA SPACE (tương thích nhiều cấu trúc) ====== */
+
+/* 1) state */
+let flipped = false;
+
+/* 2) update view helper: tự động nhận diện UI đang dùng
+   - nếu có #cardBox thì dùng cột đơn (jp/vi)
+   - ngược lại nếu có #frontCard / #backCard thì dùng 2 mặt đó (front/back)
+   - giữ nguyên class 'flipped' nếu có cardInner để animation */
+function updateCardView() {
+    // single-box UI (id="cardBox", props jp/vi)
+    const single = document.getElementById("cardBox");
+    if (single) {
+        if (!currentCards || currentCards.length === 0) {
+            single.innerText = single.getAttribute("data-empty") || "Chưa có thẻ!";
+            return;
+        }
+        const c = currentCards[currentIndex] || {};
+        // choose property: prefer vi/jp then back/front then generic text
+        const frontText = (c.jp !== undefined) ? c.jp : (c.front !== undefined ? c.front : (c.text || ""));
+        const backText  = (c.vi !== undefined) ? c.vi : (c.back !== undefined ? c.back : (c.hint || ""));
+        single.innerText = flipped ? backText : frontText;
+        return;
+    }
+
+    // two-side UI with frontCard/backCard + cardInner
+    const frontEl = document.getElementById("frontCard");
+    const backEl  = document.getElementById("backCard");
+    const inner   = document.getElementById("cardInner");
+    if (frontEl && backEl) {
+        if (!currentCards || currentCards.length === 0) {
+            frontEl.textContent = "Không có thẻ nào";
+            backEl.textContent = "—";
+            if (inner) inner.classList.remove("flipped");
+            return;
+        }
+        const c = currentCards[currentIndex] || {};
+        const frontText = (c.front !== undefined) ? c.front : (c.jp !== undefined ? c.jp : (c.text || ""));
+        const backText  = (c.back  !== undefined) ? c.back  : (c.vi !== undefined ? c.vi : (c.hint || ""));
+        frontEl.textContent = frontText;
+        backEl.textContent  = backText;
+        // manage class for flip animation if exists
+        if (inner) {
+            if (flipped) inner.classList.add("flipped");
+            else inner.classList.remove("flipped");
+        }
+        return;
+    }
+
+    // fallback: try elements that might exist
+    // (do nothing if no recognized UI)
+}
+
+/* 3) flip action for keyboard (Space) */
+function flipCardByKey() {
+    if (!currentCards || currentCards.length === 0) return;
+    flipped = !flipped;
+    updateCardView();
+}
+
+/* 4) attach keyboard listener (Space) */
+document.addEventListener("keydown", function (ev) {
+    // use ev.code === "Space" so it works with different keyboard layouts
+    if (ev.code === "Space") {
+        // avoid page scrolling when space pressed
+        ev.preventDefault();
+        flipCardByKey();
+    }
+}, { passive: false });
+
+/* 5) wrap existing refreshDisplay to ensure flipped resets on card change
+   If refreshDisplay already exists (function declaration), we wrap it.
+   If not, we simply ensure updateCardView is called after any future refresh. */
+if (typeof refreshDisplay === "function") {
+    // keep original
+    const __orig_refresh = refreshDisplay;
+    refreshDisplay = function() {
+        // call original
+        __orig_refresh();
+        // after original runs, reset flip state and update view to show front
+        flipped = false;
+        updateCardView();
+    };
+} else {
+    // fallback: define a refresh shim that just updates view
+    function refreshDisplayWrapper() {
+        flipped = false;
+        updateCardView();
+    }
+    // do not overwrite anything if refreshDisplay later defined; but call wrapper now
+    // (not ideal, but safe)
+}
+
+/* 6) also ensure update runs on page load if cards already loaded */
+window.addEventListener("load", function() {
+    // allow existing onload handlers first (they run before ours if added earlier)
+    // then update view according to current state
+    setTimeout(() => {
+        // ensure flipped false on load
+        flipped = false;
+        updateCardView();
+    }, 10);
+});
 </script>
 </body>
 </html>
+
 
